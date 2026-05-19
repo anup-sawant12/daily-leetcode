@@ -16,7 +16,8 @@ const PrivateRoute = ({ children }) => {
 const AppContent = () => {
   const { user } = useContext(AuthContext);
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-300 font-sans">
+    <div className="min-h-screen text-slate-300 font-sans relative">
+      <div className="fixed-bg"></div>
       {user && <Navbar />}
       <Routes>
         <Route path="/login" element={<Login />} />

@@ -67,7 +67,7 @@ const Progress = () => {
       </div>
 
       <div className="glass-panel rounded-3xl p-6 sm:p-8 shadow-2xl mb-8 border border-white/10 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full mix-blend-screen filter blur-[80px] pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full filter blur-[60px] pointer-events-none transform translate-z-0"></div>
         
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 relative z-10 gap-6">
           <div>

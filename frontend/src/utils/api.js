@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://https://daily-leetcode.onrender.com/api:5000/api',
+  baseURL: 'https://daily-leetcode.onrender.com/api:5000/api',
 });
 
 api.interceptors.request.use((config) => {

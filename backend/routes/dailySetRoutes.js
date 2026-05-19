@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getTodaySet, markAsSolved, getSolvedQuestions, generateSet, getStats, remoteSeed } = require('../controllers/dailySetController');
+const { getTodaySet, markAsSolved, getSolvedQuestions, generateSet, getStats, remoteSeed, getHistory } = require('../controllers/dailySetController');
 const { protect } = require('../middleware/authMiddleware');
 
 router.get('/seed', remoteSeed);
@@ -9,5 +9,6 @@ router.post('/generate', protect, generateSet);
 router.post('/solve/:id', protect, markAsSolved);
 router.get('/solved', protect, getSolvedQuestions);
 router.get('/stats', protect, getStats);
+router.get('/history', protect, getHistory);
 
 module.exports = router;

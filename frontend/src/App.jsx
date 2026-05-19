@@ -4,6 +4,7 @@ import { AuthProvider, AuthContext } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import Progress from './pages/Progress';
+import History from './pages/History';
 import Login from './pages/Login';
 import Register from './pages/Register';
 
@@ -30,6 +31,11 @@ const AppContent = () => {
         <Route path="/progress" element={
           <PrivateRoute>
             <Progress />
+          </PrivateRoute>
+        } />
+        <Route path="/history" element={
+          <PrivateRoute>
+            <History />
           </PrivateRoute>
         } />
       </Routes>

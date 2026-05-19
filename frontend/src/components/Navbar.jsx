@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { Flame, LogOut, Code2, LineChart, ChevronLeft } from 'lucide-react';
+import { Flame, LogOut, Code2, LineChart, ChevronLeft, BookOpen } from 'lucide-react';
 
 const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
@@ -38,7 +38,11 @@ const Navbar = () => {
                   <Flame size={18} className="animate-pulse" />
                   <span>{user.streak} Day Streak</span>
                 </div>
-                <Link to="/progress" className="text-slate-300 hover:text-white flex items-center gap-1 font-medium transition-colors hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">
+                <Link to="/history" className={`text-slate-300 hover:text-white flex items-center gap-1 font-medium transition-colors ${location.pathname === '/history' ? 'text-white' : ''}`}>
+                  <BookOpen size={18} />
+                  <span className="hidden sm:inline">History</span>
+                </Link>
+                <Link to="/progress" className={`text-slate-300 hover:text-white flex items-center gap-1 font-medium transition-colors hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] ${location.pathname === '/progress' ? 'text-white' : ''}`}>
                   <LineChart size={18} />
                   <span className="hidden sm:inline">Progress</span>
                 </Link>

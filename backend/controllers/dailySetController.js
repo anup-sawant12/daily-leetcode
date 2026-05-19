@@ -182,11 +182,54 @@ const remoteSeed = async (req, res) => {
   }
 };
 
+// @desc    Get solve history and missed questions
+// @route   GET /api/daily-sets/history
+// @access  Private
+const getHistory = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const solvedRecords = await SolvedQuestion.find({ user: userId })
+      .populate('question')
+      .sort({ solvedAt: -1 });
+
+    const allSets = await DailySet.find().populate('questions');
+    const solvedIds = new Set(solvedRecords.map(sq => {
+      return sq.question && sq.question._id ? sq.question._id.toString() : null;
+    }).filter(Boolean));
+
+    const missedQuestionsMap = new Map();
+    allSets.forEach(set => {
+      set.questions.forEach(q => {
+        if (q && q._id && !solvedIds.has(q._id.toString())) {
+          missedQuestionsMap.set(q._id.toString(), {
+            ...q.toObject(),
+            missedDate: set.date
+          });
+        }
+      });
+    });
+
+    const missedQuestions = Array.from(missedQuestionsMap.values())
+      .sort((a, b) => new Date(b.missedDate) - new Date(a.missedDate));
+
+    // Filter out null questions from solvedRecords just in case
+    const validSolved = solvedRecords.filter(sq => sq.question != null);
+
+    res.json({
+      solved: validSolved,
+      missed: missedQuestions
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getTodaySet,
   markAsSolved,
   getSolvedQuestions,
   generateSet,
   getStats,
-  remoteSeed
+  remoteSeed,
+  getHistory
 };

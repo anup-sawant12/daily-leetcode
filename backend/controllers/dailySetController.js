@@ -1,7 +1,10 @@
 const DailySet = require('../models/DailySet');
 const SolvedQuestion = require('../models/SolvedQuestion');
 const User = require('../models/User');
+const Question = require('../models/Question');
 const { generateDailySet } = require('../utils/generator');
+const fs = require('fs');
+const path = require('path');
 
 // @desc    Generate today's set manually
 // @route   POST /api/daily-sets/generate
@@ -125,10 +128,29 @@ const getSolvedQuestions = async (req, res) => {
   }
 };
 
+// @desc    Remote seeder and resetter
+// @route   GET /api/daily-sets/seed
+// @access  Public
+const remoteSeed = async (req, res) => {
+  try {
+    const dataPath = path.join(__dirname, '..', 'utils', 'questions.json');
+    const problems = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+    
+    await Question.deleteMany();
+    await Question.insertMany(problems);
+    await DailySet.deleteMany();
+
+    res.json({ message: 'Database successfully seeded and DailySets cleared!' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getTodaySet,
   markAsSolved,
   getSolvedQuestions,
   generateSet,
-  getStats
+  getStats,
+  remoteSeed
 };

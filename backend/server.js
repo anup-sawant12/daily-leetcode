@@ -21,6 +21,7 @@ app.use(express.json());
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/questions', require('./routes/questionRoutes'));
 app.use('/api/daily-sets', require('./routes/dailySetRoutes'));
+app.use('/api/notes', require('./routes/noteRoutes'));
 
 // Initialize Cron Jobs
 require('./utils/cronJob');

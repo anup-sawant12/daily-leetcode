@@ -14,6 +14,10 @@ const solvedQuestionSchema = new mongoose.Schema({
   solvedAt: {
     type: Date,
     default: Date.now
+  },
+  solveCount: {
+    type: Number,
+    default: 1
   }
 }, { timestamps: true });
 

@@ -224,6 +224,84 @@ const getHistory = async (req, res) => {
   }
 };
 
+// @desc    Increment solve count for a question
+// @route   POST /api/daily-sets/solve/:id/increment
+// @access  Private
+const incrementSolveCount = async (req, res) => {
+  try {
+    const questionId = req.params.id;
+    const userId = req.user._id;
+
+    let solvedQuestion = await SolvedQuestion.findOne({ user: userId, question: questionId });
+
+    if (!solvedQuestion) {
+      solvedQuestion = await SolvedQuestion.create({
+        user: userId,
+        question: questionId,
+        solveCount: 1
+      });
+      
+      // Update streak logic
+      const user = await User.findById(userId);
+      const today = new Date().toISOString().split('T')[0];
+      const lastSolved = user.lastSolvedDate ? user.lastSolvedDate.toISOString().split('T')[0] : null;
+
+      if (lastSolved !== today) {
+        if (lastSolved) {
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          const yesterdayStr = yesterday.toISOString().split('T')[0];
+          
+          if (lastSolved === yesterdayStr) {
+            user.streak += 1;
+          } else {
+            user.streak = 1;
+          }
+        } else {
+          user.streak = 1;
+        }
+        user.lastSolvedDate = new Date();
+        await user.save();
+      }
+    } else {
+      solvedQuestion.solveCount += 1;
+      await solvedQuestion.save();
+    }
+
+    res.json({ message: 'Solve count incremented', solveCount: solvedQuestion.solveCount, status: 'solved' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Decrement solve count for a question
+// @route   POST /api/daily-sets/solve/:id/decrement
+// @access  Private
+const decrementSolveCount = async (req, res) => {
+  try {
+    const questionId = req.params.id;
+    const userId = req.user._id;
+
+    const solvedQuestion = await SolvedQuestion.findOne({ user: userId, question: questionId });
+
+    if (!solvedQuestion) {
+      return res.status(404).json({ message: 'Solved record not found' });
+    }
+
+    solvedQuestion.solveCount -= 1;
+
+    if (solvedQuestion.solveCount <= 0) {
+      await SolvedQuestion.deleteOne({ _id: solvedQuestion._id });
+      return res.json({ message: 'Question unmarked', solveCount: 0, status: 'unsolved' });
+    } else {
+      await solvedQuestion.save();
+      return res.json({ message: 'Solve count decremented', solveCount: solvedQuestion.solveCount, status: 'solved' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getTodaySet,
   markAsSolved,
@@ -231,5 +309,7 @@ module.exports = {
   generateSet,
   getStats,
   remoteSeed,
-  getHistory
+  getHistory,
+  incrementSolveCount,
+  decrementSolveCount
 };

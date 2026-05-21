@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 
 const Dashboard = () => {
   const [dailySet, setDailySet] = useState(null);
-  const [solvedIds, setSolvedIds] = useState([]);
+  const [solvedMap, setSolvedMap] = useState({});
   const [loading, setLoading] = useState(true);
   const { user, setUser } = useContext(AuthContext);
   const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0]);
@@ -43,7 +43,14 @@ const Dashboard = () => {
           api.get('/notes')
         ]);
         setDailySet(setRes.data);
-        setSolvedIds(solvedRes.data.map(sq => sq.question._id));
+        
+        const map = {};
+        solvedRes.data.forEach(sq => {
+          if (sq.question) {
+            map[sq.question._id] = sq.solveCount || 1;
+          }
+        });
+        setSolvedMap(map);
         
         const notesMap = {};
         notesRes.data.forEach(note => {
@@ -92,15 +99,50 @@ const Dashboard = () => {
     try {
       const res = await api.post(`/daily-sets/solve/${id}`);
       if (res.data.status === 'unsolved') {
-        setSolvedIds(solvedIds.filter(solvedId => solvedId !== id));
+        const newSolvedMap = { ...solvedMap };
+        delete newSolvedMap[id];
+        setSolvedMap(newSolvedMap);
       } else {
-        setSolvedIds([...solvedIds, id]);
+        setSolvedMap({
+          ...solvedMap,
+          [id]: 1
+        });
         if (res.data.streak !== undefined) {
           setUser({ ...user, streak: res.data.streak });
         }
       }
     } catch (error) {
       console.error('Error marking solved', error);
+    }
+  };
+
+  const handleIncrementSolve = async (id) => {
+    try {
+      const res = await api.post(`/daily-sets/solve/${id}/increment`);
+      setSolvedMap({
+        ...solvedMap,
+        [id]: res.data.solveCount
+      });
+    } catch (error) {
+      console.error('Error incrementing solve count', error);
+    }
+  };
+
+  const handleDecrementSolve = async (id) => {
+    try {
+      const res = await api.post(`/daily-sets/solve/${id}/decrement`);
+      if (res.data.status === 'unsolved') {
+        const newSolvedMap = { ...solvedMap };
+        delete newSolvedMap[id];
+        setSolvedMap(newSolvedMap);
+      } else {
+        setSolvedMap({
+          ...solvedMap,
+          [id]: res.data.solveCount
+        });
+      }
+    } catch (error) {
+      console.error('Error decrementing solve count', error);
     }
   };
 
@@ -126,7 +168,7 @@ const Dashboard = () => {
     );
   }
 
-  const progressCount = solvedIds.filter(id => dailySet?.questions.some(q => q._id === id)).length;
+  const progressCount = Object.keys(solvedMap).filter(id => dailySet?.questions.some(q => q._id === id)).length;
   const progressPercent = (progressCount / 6) * 100;
 
   return (
@@ -170,7 +212,8 @@ const Dashboard = () => {
       ) : (
         <div className="space-y-4">
           {dailySet.questions.map((question, index) => {
-            const isSolved = solvedIds.includes(question._id);
+            const solveCount = solvedMap[question._id] || 0;
+            const isSolved = solveCount > 0;
             return (
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
@@ -222,6 +265,27 @@ const Dashboard = () => {
                       <span className={`px-3 py-1 rounded-lg border ${getDifficultyStyles(question.difficulty)}`}>
                         {question.difficulty}
                       </span>
+                      {isSolved && (
+                        <div className="flex items-center gap-1.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 px-3 py-1 rounded-lg text-xs font-bold shadow-sm">
+                          <span>Solved {solveCount}x</span>
+                          <div className="flex items-center gap-1 ml-1.5 border-l border-blue-500/20 pl-1.5">
+                            <button 
+                              onClick={(e) => { e.preventDefault(); handleDecrementSolve(question._id); }}
+                              className="hover:text-blue-200 transition-colors px-1 text-sm leading-none font-bold"
+                              title="Decrement solve count"
+                            >
+                              -
+                            </button>
+                            <button 
+                              onClick={(e) => { e.preventDefault(); handleIncrementSolve(question._id); }}
+                              className="hover:text-blue-200 transition-colors px-1 text-sm leading-none font-bold"
+                              title="Increment solve count"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                      )}
                       {question.topicTags.slice(0, 4).map(tag => (
                         <span key={tag} className="px-3 py-1 rounded-lg bg-slate-800/80 text-slate-300 border border-white/10 shadow-sm backdrop-blur-md">
                           {tag}

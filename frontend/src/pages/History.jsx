@@ -66,6 +66,52 @@ const History = () => {
     }
   };
 
+  const handleMarkSolved = async (id) => {
+    try {
+      await api.post(`/daily-sets/solve/${id}`);
+      // Refresh history data
+      const historyResponse = await api.get('/daily-sets/history');
+      setSolved(historyResponse.data.solved);
+      setMissed(historyResponse.data.missed);
+    } catch (error) {
+      console.error('Error marking solved:', error);
+    }
+  };
+
+  const handleIncrementSolve = async (questionId) => {
+    try {
+      const res = await api.post(`/daily-sets/solve/${questionId}/increment`);
+      setSolved(solved.map(item => {
+        if (item.question._id === questionId) {
+          return { ...item, solveCount: res.data.solveCount };
+        }
+        return item;
+      }));
+    } catch (error) {
+      console.error('Error incrementing solve count:', error);
+    }
+  };
+
+  const handleDecrementSolve = async (questionId) => {
+    try {
+      const res = await api.post(`/daily-sets/solve/${questionId}/decrement`);
+      if (res.data.status === 'unsolved') {
+        const historyResponse = await api.get('/daily-sets/history');
+        setSolved(historyResponse.data.solved);
+        setMissed(historyResponse.data.missed);
+      } else {
+        setSolved(solved.map(item => {
+          if (item.question._id === questionId) {
+            return { ...item, solveCount: res.data.solveCount };
+          }
+          return item;
+        }));
+      }
+    } catch (error) {
+      console.error('Error decrementing solve count:', error);
+    }
+  };
+
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
       case 'Easy': return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20';
@@ -146,10 +192,31 @@ const History = () => {
                 >
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full">
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
+                      <div className="flex flex-wrap items-center gap-3 mb-2">
                         <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getDifficultyColor(q.difficulty)}`}>
                           {q.difficulty}
                         </span>
+                        {activeTab === 'solved' && (
+                          <div className="flex items-center gap-1.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                            <span>Solved {item.solveCount || 1}x</span>
+                            <div className="flex items-center gap-1 ml-1.5 border-l border-blue-500/20 pl-1.5">
+                              <button 
+                                onClick={(e) => { e.preventDefault(); handleDecrementSolve(q._id); }}
+                                className="hover:text-blue-200 transition-colors px-1 text-sm leading-none font-bold"
+                                title="Decrement solve count"
+                              >
+                                -
+                              </button>
+                              <button 
+                                onClick={(e) => { e.preventDefault(); handleIncrementSolve(q._id); }}
+                                className="hover:text-blue-200 transition-colors px-1 text-sm leading-none font-bold"
+                                title="Increment solve count"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
+                        )}
                         <span className="text-slate-500 text-sm">
                           {activeTab === 'solved' ? 'Solved on: ' : 'Missed on: '} 
                           <span className="font-semibold text-slate-300">{dateStr}</span>
@@ -173,6 +240,16 @@ const History = () => {
                     </div>
                     
                     <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
+                      {activeTab === 'missed' && (
+                        <button
+                          onClick={() => handleMarkSolved(q._id)}
+                          className="flex items-center justify-center w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300 transition-colors border border-transparent animate-fade-in"
+                          title="Mark as solved"
+                        >
+                          <CheckCircle2 size={20} />
+                        </button>
+                      )}
+
                       <button
                         onClick={() => handleToggleNote(q._id)}
                         className={`flex items-center justify-center w-12 h-12 rounded-xl border transition-all ${

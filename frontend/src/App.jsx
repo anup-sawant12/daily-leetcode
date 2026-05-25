@@ -19,6 +19,7 @@ const AppContent = () => {
   return (
     <div className="min-h-screen text-slate-300 font-sans relative">
       <div className="fixed-bg"></div>
+      <div className="grid-overlay"></div>
       {user && <Navbar />}
       <Routes>
         <Route path="/login" element={<Login />} />

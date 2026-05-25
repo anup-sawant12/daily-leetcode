@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { Code2, ChevronLeft, Sparkles } from 'lucide-react';
+import { Code2, ChevronLeft, Sparkles, Mail, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Login = () => {
@@ -23,83 +23,90 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Decorative Blobs - Optimized */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full filter blur-[60px] pointer-events-none transform translate-z-0"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/10 rounded-full filter blur-[60px] pointer-events-none transform translate-z-0"></div>
+      {/* Dynamic Animated Blobs */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full filter blur-[70px] pointer-events-none animate-float-blob"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-600/10 rounded-full filter blur-[70px] pointer-events-none animate-float-blob-reverse"></div>
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-        <Link to="/" className="absolute -left-12 top-2 text-slate-400 hover:text-white transition-colors bg-white/5 p-2 rounded-full backdrop-blur-sm hidden md:flex">
-          <ChevronLeft size={24} />
+      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-4 sm:px-0">
+        <Link to="/" className="absolute -left-16 top-3 text-slate-400 hover:text-white transition-all bg-white/5 hover:bg-white/10 p-2.5 rounded-xl border border-white/5 backdrop-blur-sm hidden md:flex">
+          <ChevronLeft size={20} />
         </Link>
-        <div className="flex justify-center text-blue-400 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
-          <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-md border border-white/10">
-            <Code2 size={48} />
+        <div className="flex justify-center text-blue-400 drop-shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+          <div className="bg-slate-950/40 p-4 rounded-2xl backdrop-blur-md border border-white/10 shadow-2xl">
+            <Code2 size={40} className="text-blue-500" />
           </div>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-white tracking-tight flex items-center justify-center gap-2">
-          Welcome back <Sparkles className="text-yellow-400" size={24} />
+        <h2 className="mt-6 text-center text-3xl font-black text-white tracking-tight flex items-center justify-center gap-2">
+          <span>Welcome Back</span>
+          <Sparkles className="text-amber-400 animate-pulse" size={20} />
         </h2>
         <p className="mt-2 text-center text-sm text-slate-400">
           Don't have an account?{' '}
-          <Link to="/register" className="font-semibold text-blue-400 hover:text-blue-300 transition-colors drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]">
+          <Link to="/register" className="font-bold text-blue-400 hover:text-blue-300 transition-colors">
             Sign up for free
           </Link>
         </p>
       </div>
 
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10"
+        className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10 px-4 sm:px-0"
       >
-        <div className="glass-panel py-8 px-4 shadow-2xl sm:rounded-2xl sm:px-10 border border-white/10">
+        <div className="glass-panel py-8 px-6 sm:px-10 shadow-2xl rounded-2xl border border-white/5 bg-slate-950/40 backdrop-blur-xl">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-500/10 border border-red-500/50 text-red-400 text-sm p-4 rounded-xl flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-red-400"></div>
-                {error}
+              <div className="bg-rose-500/10 border border-rose-500/25 text-rose-400 text-xs p-3.5 rounded-xl flex items-center gap-2.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0"></div>
+                <span>{error}</span>
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                Email address
+              <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">
+                Email Address
               </label>
-              <input
-                type="email"
-                required
-                className="appearance-none block w-full px-4 py-3 border border-white/10 rounded-xl shadow-sm bg-white/5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all sm:text-sm backdrop-blur-sm"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+              <div className="relative">
+                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+                <input
+                  type="email"
+                  required
+                  className="glass-input pl-11 pr-4 py-3 w-full text-sm"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">
+              <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">
                 Password
               </label>
-              <input
-                type="password"
-                required
-                className="appearance-none block w-full px-4 py-3 border border-white/10 rounded-xl shadow-sm bg-white/5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all sm:text-sm backdrop-blur-sm"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              <div className="relative">
+                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+                <input
+                  type="password"
+                  required
+                  className="glass-input pl-11 pr-4 py-3 w-full text-sm"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
             </div>
 
-            <div>
+            <div className="pt-2">
               <button
                 type="submit"
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.3)] text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-blue-500 transition-all"
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.2)] hover:shadow-[0_0_30px_rgba(59,130,246,0.3)] text-sm font-black text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all active:scale-[0.98]"
               >
-                Sign in to Dashboard
+                Sign In to Dashboard
               </button>
             </div>
             
             <div className="md:hidden text-center mt-4">
-              <Link to="/" className="text-sm text-slate-400 hover:text-white inline-flex items-center gap-1">
-                <ChevronLeft size={16} /> Back to home
+              <Link to="/" className="text-xs text-slate-400 hover:text-white inline-flex items-center gap-1 font-semibold">
+                <ChevronLeft size={14} /> Back to Home
               </Link>
             </div>
           </form>

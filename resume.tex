@@ -1,0 +1,187 @@
+%------------------------
+% Resume in LaTeX
+% Author: Anup Sawant
+% ATS-Optimized for Accenture
+%------------------------
+
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\usepackage{geometry}
+
+\geometry{margin=0.6in}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\urlstyle{same}
+
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% Sections formatting
+\titleformat{\section}{
+  \vspace{-6pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+%-------------------------
+% Custom commands
+\newcommand{\resumeItem}[1]{
+  \item\small{
+    {#1 \vspace{-2pt}}
+  }
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & #2 \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeSubItem}[1]{\resumeItem{#1}\vspace{-4pt}}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+%-------------------------------------------
+%%%%%%  RESUME STARTS HERE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+%----------HEADING----------
+\begin{center}
+    \textbf{\Huge \scshape Anup Sawant} \\ \vspace{2pt}
+    \small Mumbai, Maharashtra, India \\ \vspace{1pt}
+    \small \href{mailto:anupsawant047@gmail.com}{anupsawant047@gmail.com} $|$ 
+   \small{\href{https://www.linkedin.com/in/anup-sawant-859238259/}{Linkedin}}
+   $|$
+    \small{\href{https://github.com/anup-sawant12}{Github}}
+\end{center}
+
+
+%-----------EDUCATION-----------
+\section{Education}
+
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1.5}
+
+\begin{tabularx}{\textwidth}{|c|c|X|X|c|}
+\hline
+\textbf{Year} & \textbf{Degree} & \textbf{Branch} & \textbf{Institute} & \textbf{CGPA/\%} \\
+\hline
+2024--2028 &
+B.Tech &
+Electronics \& Computer Science &
+Vidyalankar Institute of Technology, Mumbai &
+8.55 \\
+\hline
+2024 &
+HSC (XII) &
+- &
+Sindhudurg Academy, Sindhudurg &
+76.83\% \\
+\hline
+2022 &
+SSC (X) &
+- &
+Shivaji Vidyalaya, Hirlok &
+90.80 \% \\
+\hline
+\end{tabularx}
+
+%-----------TECHNICAL SKILLS-----------
+\section{Technical Skills}
+ \begin{itemize}[leftmargin=0.15in, label={}]
+    \small{\item{
+     \textbf{Programming Languages}{: C, C++, Python, SQL, HTML, CSS, JavaScript} \\
+     \textbf{Backend Technologies}{: Node.js, Express.js} \\
+     \textbf{Frontend Technologies}{: React (Vite), Tailwind CSS, Framer Motion, EJS} \\
+     \textbf{Database}{: MongoDB, MySQL} \\
+     \textbf{Developer Tools}{: Git, VS Code, Eclipse} \\
+     \textbf{Technologies/Frameworks}{: Object-Oriented Programming, Data Structures, Algorithms, Linux} \\
+     \textbf{Core Competencies}{: Problem Solving, Analytical Thinking, Team Collaboration, Quick Learner, Adaptability} \\
+     \textbf{Soft Skills}{: Communication, Time Management, Leadership, Critical Thinking}
+    }}
+ \end{itemize}
+
+%-----------PROJECTS-----------
+\section{Projects}
+    \resumeSubHeadingListStart
+      \resumeProjectHeading
+          {\textbf{Daily LeetCode Generator} $|$ \emph{React, Node.js, Express.js, MongoDB, Tailwind CSS, Framer Motion}}{May 2026}
+          \resumeItemListStart
+            \resumeItem{Developed a full-stack web application that automatically generates a daily set of 6 targeted LeetCode questions (1 Easy, 4 Medium, 1 Hard) at midnight using scheduled cron jobs, ensuring no question repeats from the prior 7 days.}
+            \resumeItem{Implemented a RESTful note-taking API enabling users to write, update, and persist custom problem-solving insights directly within question cards, seamlessly integrated with the solve history.}
+            \resumeItem{Designed a modern, responsive, and animated dark-themed dashboard using React (Vite), Tailwind CSS v4, and Framer Motion for micro-animations.}
+            \resumeItem{Secured user access with JWT-based authentication and optimized MongoDB Mongoose schemas with indexing constraints for data integrity and scalability.}
+          \resumeItemListEnd
+      \resumeProjectHeading
+          {\textbf{Crime Management System} $|$ \emph{Node.js, Express.js, MySQL, EJS}}{Feb 2026}
+          \resumeItemListStart
+            \resumeItem{Developing a full-stack web application to manage crime records with CRUD operations}
+            \resumeItem{Designed RESTful routes using Express.js for efficient data handling}
+            \resumeItem{Integrated MySQL database for structured storage of case details and user records}
+            \resumeItem{Implemented server-side rendering using EJS templates for dynamic content generation}
+          \resumeItemListEnd
+    \resumeSubHeadingListEnd
+
+%-----------CERTIFICATIONS-----------
+\section{Certifications}
+    \resumeSubHeadingListStart
+      \resumeProjectHeading
+          {\textbf{MATLAB Certification}}{2024}
+          \resumeItemListStart
+            \resumeItem{Completed comprehensive MATLAB training covering programming fundamentals and advanced applications}
+          \resumeItemListEnd
+      \resumeProjectHeading
+          {\textbf{LinkedIn Learning Courses}}{2024}
+          \resumeItemListStart
+            \resumeItem{Actively pursuing professional development courses in software engineering and technology trends}
+          \resumeItemListEnd
+    \resumeSubHeadingListEnd
+
+%-----------ACHIEVEMENTS & ACTIVITIES-----------
+\section{Achievements}
+    \resumeSubHeadingListStart
+      \resumeProjectHeading
+          {\textbf{Solved 400+ Problems on Various Platforms}}{2026}
+          \resumeItemListStart
+            \resumeItem{\href{https://leetcode.com/u/anup_sawant12/}{LeetCode}}
+            \resumeItem{\href{https://www.geeksforgeeks.org/profile/anupsaway9kp}{GeeksforGeeks}}
+          \resumeItemListEnd
+      \resumeProjectHeading
+          {\textbf{Coding Enthusiast}}{Ongoing}
+          \resumeItemListStart
+            \resumeItem{Regular participant in online coding platforms to enhance problem-solving skills}
+            \resumeItem{Active member of college coding club, collaborating on technical projects}
+          \resumeItemListEnd
+    \resumeSubHeadingListEnd
+
+\end{document}

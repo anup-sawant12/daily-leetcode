@@ -59,6 +59,34 @@ const Leaderboard = () => {
     return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
   };
 
+  const getCoderAward = (index) => {
+    switch (index) {
+      case 0:
+        return (
+          <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider bg-amber-400/10 border border-amber-400/30 text-amber-400 px-2 py-0.5 rounded-full shadow-[0_0_10px_rgba(250,204,21,0.1)]">
+            <Sparkles size={10} className="text-amber-400 animate-pulse" />
+            Apex Coder
+          </span>
+        );
+      case 1:
+        return (
+          <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider bg-slate-300/10 border border-slate-300/30 text-slate-300 px-2 py-0.5 rounded-full">
+            <Award size={10} className="text-slate-300" />
+            Elite Solver
+          </span>
+        );
+      case 2:
+        return (
+          <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider bg-amber-700/10 border border-amber-700/30 text-amber-600 px-2 py-0.5 rounded-full">
+            <Trophy size={10} className="text-amber-600" />
+            Rising Star
+          </span>
+        );
+      default:
+        return null;
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto py-12 px-4 animate-pulse">
@@ -164,7 +192,7 @@ const Leaderboard = () => {
                         }`}>
                           {getInitials(coder.name)}
                         </div>
-                        <div>
+                        <div className="flex flex-col gap-0.5">
                           <span className={`font-bold text-sm flex items-center gap-1.5 ${
                             isCurrentUser ? 'text-blue-400' : 'text-white'
                           }`}>
@@ -175,6 +203,11 @@ const Leaderboard = () => {
                               </span>
                             )}
                           </span>
+                          {index < 3 && (
+                            <div className="mt-0.5">
+                              {getCoderAward(index)}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </td>

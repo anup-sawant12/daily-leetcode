@@ -19,10 +19,11 @@ Access the live application here:
 - Expandable strategy drawers for each challenge card utilizing Lucide icons and sleek micro-animations.
 - Provides target time/space complexity guides and custom-tailored hints based on active topic tags (e.g., sliding window, recursive DP transitions, BST base cases).
 
-### 3. Coders Leaderboard (Weekly, Monthly, Overall)
+### 3. Coders Leaderboard & Top-3 Awards
 - Live global leaderboard showcasing the top coders.
 - Interactive toggle tabs to filter rankings by **Weekly Solved**, **Monthly Solved**, or **Overall Solved** counts.
 - Highlights podium ranks (1st, 2nd, 3rd) with trophy status indicators and highlights the current user's profile inline.
+- Displays custom prestige title badges next to coder names for the top 3 spots: **Apex Coder** (1st), **Elite Solver** (2nd), and **Rising Star** (3rd).
 
 ### 4. Locked LeetCode Profile Verification (Anti-Hijacking)
 - Profile verification is locked backend-side to prevent profile hijacking and leaderboard spoofing.

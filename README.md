@@ -1,71 +1,97 @@
-# DSAVerse
+# DSAVerse 🚀
 
-A full-stack web application to generate a daily set of LeetCode questions for structured practice.
+A premium full-stack web application designed for structured daily LeetCode practice, profile tracking, and friendly competition.
 
-## Live Demo
+## 🔗 Live Website
+Access the live application here:
+👉 **[DSAVerse Login](https://daily-leetcode-ten.vercel.app/login)**
 
-🔗 https://daily-leetcode-ten.vercel.app/
+---
 
-## Tech Stack
+## 🌟 Key Features
 
-* Frontend: React (Vite), Tailwind CSS v4, Lucide React, Framer Motion
-* Backend: Node.js, Express
-* Database: MongoDB (Mongoose)
+### 1. Daily Challenge Sets
+- Dynamic daily question sets containing **6 custom questions** (1 Easy, 4 Medium, 1 Hard) generated automatically.
+- Custom options to adjust question counts per difficulty and filter specific topics (e.g., Dynamic Programming, Graphs) when generating or regenerating a set.
+- Smart deduplication to ensure questions solved within the last 7 days are not repeated.
 
-## Features
+### 2. Algorithmic Strategy Hints Drawer
+- Expandable strategy drawers for each challenge card utilizing Lucide icons and sleek micro-animations.
+- Provides target time/space complexity guides and custom-tailored hints based on active topic tags (e.g., sliding window, recursive DP transitions, BST base cases).
 
-* Daily generation of 6 questions (1 Easy, 4 Medium, 1 Hard) at midnight via Cron Jobs.
-* Questions chosen from targeted topics.
-* Does not repeat questions from the last 7 days.
-* User streak tracking.
-* Dark mode modern UI.
-* JWT Authentication.
-* MongoDB schema structure designed for scale.
+### 3. Coders Leaderboard (Weekly, Monthly, Overall)
+- Live global leaderboard showcasing the top coders.
+- Interactive toggle tabs to filter rankings by **Weekly Solved**, **Monthly Solved**, or **Overall Solved** counts.
+- Highlights podium ranks (1st, 2nd, 3rd) with trophy status indicators and highlights the current user's profile inline.
 
-## Setup Instructions
+### 4. Locked LeetCode Profile Verification (Anti-Hijacking)
+- Profile verification is locked backend-side to prevent profile hijacking and leaderboard spoofing.
+- Connects verified public profiles securely; displays user verification status and links directly to their public LeetCode profiles.
+
+### 5. Topic Tag Mastery Analytics
+- Interactive horizontal bar charts built with Recharts in the progress tab.
+- Groups solved questions dynamically by category (Arrays, Trees, Dynamic Programming, etc.) to visually chart data structure and algorithm mastery.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend**: React (Vite), Tailwind CSS v4, Framer Motion, Lucide React, Recharts
+- **Backend**: Node.js, Express, JWT Authentication
+- **Database**: MongoDB & Mongoose (Aggregation pipelines for timeframe queries)
+
+---
+
+## 💻 Setup Instructions
 
 ### Prerequisites
-
-* Node.js installed
-* MongoDB installed and running on `localhost:27017`
+- Node.js (v18+)
+- MongoDB running locally on `localhost:27017` or a MongoDB Atlas connection string.
 
 ### Backend Setup
-
-1. `cd backend`
-2. `npm install`
-3. Make sure MongoDB is running.
-4. Run `node utils/seedData.js` to seed the database with initial LeetCode questions.
-5. Run `node server.js` to start the backend on port 5000.
+1. Navigate to the backend folder:
+   ```bash
+   cd backend
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Seed initial questions database:
+   ```bash
+   node utils/seedData.js
+   ```
+4. Start the server:
+   ```bash
+   node server.js
+   ```
+   *(Running by default on `http://localhost:5000`)*
 
 ### Frontend Setup
+1. Open a new terminal and navigate to the frontend folder:
+   ```bash
+   cd frontend
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the dev server:
+   ```bash
+   npm run dev
+   ```
+4. Access the web interface at the default local URL: `http://localhost:5173`.
 
-1. Open a new terminal.
-2. `cd frontend`
-3. `npm install`
-4. Run `npm run dev` to start the Vite dev server.
-5. Open your browser to the URL provided by Vite (usually `http://localhost:5173`).
+---
 
-## Deployment Instructions
-
-### MongoDB Atlas
-
-1. Create a MongoDB Atlas cluster.
-2. Get the connection string.
-3. Replace the `MONGO_URI` in `backend/.env` with your Atlas string.
+## 🚀 Deployment
 
 ### Backend (Render)
-
-1. Push your code to GitHub.
-2. Create a new Web Service on Render.
-3. Connect your GitHub repository.
-4. Set Build Command: `npm install`
-5. Set Start Command: `node server.js`
-6. Add Environment Variables: `MONGO_URI`, `PORT=5000`, `JWT_SECRET`.
+- Build Command: `npm install`
+- Start Command: `node server.js`
+- Environment variables: `MONGO_URI`, `JWT_SECRET`, `PORT`
 
 ### Frontend (Vercel)
-
-1. Push your code to GitHub.
-2. Import the project in Vercel.
-3. Set the Root Directory to `frontend`.
-4. Vercel will automatically detect Vite and set the build command to `npm run build`.
-5. Deploy!
+- Set the Root Directory to `frontend`.
+- Set the Build Command to `npm run build`.
+- Redirect API requests through environment variables pointing to the deployed backend endpoint.

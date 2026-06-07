@@ -7,6 +7,7 @@ import Progress from './pages/Progress';
 import History from './pages/History';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Leaderboard from './pages/Leaderboard';
 
 import { Code2, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -109,6 +110,11 @@ const AppContent = () => {
         <Route path="/history" element={
           <PrivateRoute>
             <History />
+          </PrivateRoute>
+        } />
+        <Route path="/leaderboard" element={
+          <PrivateRoute>
+            <Leaderboard />
           </PrivateRoute>
         } />
       </Routes>

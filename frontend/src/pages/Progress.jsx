@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import api from '../utils/api';
 import { motion } from 'framer-motion';
 import { LineChart, Trophy, Target, Award, AwardIcon } from 'lucide-react';
@@ -234,6 +234,50 @@ const Progress = () => {
           </div>
         </div>
       </div>
+
+      {/* Topic tag counts chart */}
+      {stats?.topicCounts && stats.topicCounts.length > 0 && (
+        <div className="glass-panel rounded-3xl p-6 sm:p-8 shadow-2xl border border-white/5 relative overflow-hidden bg-slate-900/20 mb-8">
+          <div className="absolute top-0 left-0 w-64 h-64 bg-blue-500/5 rounded-full filter blur-[80px] pointer-events-none"></div>
+          
+          <div className="mb-6 relative z-10">
+            <h3 className="text-white font-bold text-lg">Topic Mastery Breakdown</h3>
+            <p className="text-slate-400 text-xs mt-1">Number of questions solved grouped by LeetCode topic tags.</p>
+          </div>
+
+          <div className="h-[280px] w-full relative z-10">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={stats.topicCounts} layout="vertical" margin={{ top: 10, right: 10, left: 10, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.03)" />
+                <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} />
+                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 700 }} width={110} />
+                <Tooltip 
+                  cursor={{ fill: 'rgba(255,255,255,0.02)' }}
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="glass-panel p-2.5 rounded-lg border border-white/10 bg-slate-950/90 text-xs text-white">
+                          <p className="text-slate-400 font-bold">{payload[0].payload.name}</p>
+                          <p className="text-indigo-400 font-extrabold mt-0.5">
+                            Solved: <span className="text-white">{payload[0].value}</span>
+                          </p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                  {stats.topicCounts.map((entry, index) => {
+                    const colors = ['#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e', '#10b981'];
+                    return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                  })}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
 
       {/* Interactive highlights row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">

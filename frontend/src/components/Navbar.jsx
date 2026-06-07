@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { Flame, LogOut, Code2, LineChart, ChevronLeft, BookOpen } from 'lucide-react';
+import { Flame, LogOut, Code2, LineChart, ChevronLeft, BookOpen, Trophy } from 'lucide-react';
 
 const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
@@ -71,6 +71,18 @@ const Navbar = () => {
                 >
                   <LineChart size={16} />
                   <span className="hidden md:inline">Analytics</span>
+                </Link>
+
+                <Link 
+                  to="/leaderboard" 
+                  className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
+                    location.pathname === '/leaderboard' 
+                      ? 'text-amber-400 bg-amber-500/10 border border-amber-500/10' 
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-white/5 border border-transparent'
+                  }`}
+                >
+                  <Trophy size={16} />
+                  <span className="hidden md:inline">Leaderboard</span>
                 </Link>
               </div>
 

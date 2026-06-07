@@ -44,6 +44,39 @@ const Toggle = ({ label, checked, onChange }) => (
   </button>
 );
 
+const getTopicHints = (tags = [], difficulty = 'Medium') => {
+  const lowercaseTags = tags.map(t => t.toLowerCase());
+  const hints = [];
+
+  if (difficulty === 'Easy') {
+    hints.push("Target Complexity: O(N) time and O(1) space. Avoid nested loops if possible.");
+  } else if (difficulty === 'Medium') {
+    hints.push("Target Complexity: O(N log N) or O(N) time. Consider using hash maps or sorting first.");
+  } else {
+    hints.push("Target Complexity: O(N) or O(log N) optimal time. Watch out for edge cases and optimize recursion with memoization.");
+  }
+
+  if (lowercaseTags.includes('dynamic programming')) {
+    hints.push("Dynamic Programming: Define your DP state (e.g., dp[i] represents optimal answer up to index i) and transition relation. Determine base cases like dp[0].");
+  } else if (lowercaseTags.includes('graph') || lowercaseTags.includes('graphs')) {
+    hints.push("Graph Theory: Determine if BFS (shortest path, level-order) or DFS (connected components, backtracking) is more suitable. Remember to track visited nodes.");
+  } else if (lowercaseTags.includes('arrays') || lowercaseTags.includes('array')) {
+    hints.push("Array: Consider two-pointers (left/right sliding inwards), sliding window (dynamic bounds), or running prefix sums to solve subsegment queries in O(1) time.");
+  } else if (lowercaseTags.includes('binary search')) {
+    hints.push("Binary Search: Check if the search space is sorted or monotonic. Clearly define low, high, and how mid updates when the condition is met.");
+  } else if (lowercaseTags.includes('trees') || lowercaseTags.includes('tree')) {
+    hints.push("Tree/BST: Tree problems are naturally recursive. Formulate a sub-problem for root.left and root.right, and join their results in the parent call.");
+  } else if (lowercaseTags.includes('linked list')) {
+    hints.push("Linked List: Use a dummy head node to simplify node insertions/deletions. Track head pointers and use slow/fast pointers for cycle detection.");
+  } else {
+    hints.push("Algorithmic Strategy: Scan the input for structural features. Can you store elements in a Set/Map to verify existence in O(1) time?");
+  }
+
+  hints.push("Edge Cases: Remember to check empty inputs, arrays with a single element, out-of-bound array index limits, and negative integers.");
+
+  return hints;
+};
+
 const Dashboard = () => {
   const [dailySet, setDailySet] = useState(null);
   const [solvedMap, setSolvedMap] = useState({});
@@ -62,6 +95,70 @@ const Dashboard = () => {
   const [allowDP, setAllowDP] = useState(true);
   const [allowGraph, setAllowGraph] = useState(true);
   const [showRegenModal, setShowRegenModal] = useState(false);
+
+  // LeetCode Sync and Hints state
+  const [leetcodeUsername, setLeetcodeUsername] = useState('');
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncSuccess, setSyncSuccess] = useState(null);
+  const [activeHintQuestionId, setActiveHintQuestionId] = useState(null);
+
+  useEffect(() => {
+    if (user?.leetcodeUsername) {
+      setLeetcodeUsername(user.leetcodeUsername);
+      setEditingUsername(false);
+    } else {
+      setEditingUsername(true);
+    }
+  }, [user]);
+
+  const handleUpdateUsername = async () => {
+    try {
+      setLoading(true);
+      const { data } = await api.put('/auth/leetcode-username', { leetcodeUsername });
+      setUser({ ...user, leetcodeUsername: data.leetcodeUsername });
+      setEditingUsername(false);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error updating username', error);
+      setLoading(false);
+    }
+  };
+
+  const handleSyncSubmissions = async () => {
+    try {
+      setSyncing(true);
+      setSyncSuccess(null);
+      const { data } = await api.post('/daily-sets/sync');
+      setUser({ ...user, streak: data.streak });
+      setSyncSuccess({ message: data.message, count: data.syncedCount });
+      
+      const setRes = await api.get('/daily-sets/today');
+      setDailySet(setRes.data);
+      
+      const solvedRes = await api.get('/daily-sets/solved');
+      const map = {};
+      solvedRes.data.forEach(sq => {
+        if (sq.question) {
+          map[sq.question._id] = sq.solveCount || 1;
+        }
+      });
+      setSolvedMap(map);
+      setSyncing(false);
+    } catch (error) {
+      console.error('Error syncing submissions', error);
+      setSyncSuccess({ message: error.response?.data?.message || 'Sync failed', count: 0, error: true });
+      setSyncing(false);
+    }
+  };
+
+  const handleToggleHint = (questionId) => {
+    if (activeHintQuestionId === questionId) {
+      setActiveHintQuestionId(null);
+    } else {
+      setActiveHintQuestionId(questionId);
+    }
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -291,6 +388,102 @@ const Dashboard = () => {
         )}
       </div>
 
+      {syncSuccess && (
+        <div className={`p-4 rounded-xl border mb-6 flex items-start gap-3 justify-between relative z-10 ${
+          syncSuccess.error 
+            ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' 
+            : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+        }`}>
+          <div className="text-xs">
+            <span className="font-bold">{syncSuccess.error ? 'Sync Error: ' : 'Sync Complete: '}</span>
+            <span>{syncSuccess.message}</span>
+          </div>
+          <button 
+            onClick={() => setSyncSuccess(null)}
+            className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      {/* LeetCode Sync widget */}
+      <div className="glass-panel p-5 rounded-2xl border border-white/5 bg-slate-900/40 mb-10 relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="absolute top-0 left-0 w-24 h-24 bg-blue-500/5 rounded-full filter blur-xl pointer-events-none"></div>
+        <div className="flex items-center gap-3.5">
+          <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-xl">
+            <svg className="w-5 h-5 fill-current text-amber-500" viewBox="0 0 24 24">
+              <path d="M13.483 0a1.374 1.374 0 0 0-.961.414l-9.67 9.68a1.25 1.25 0 0 0 0 1.766l5.07 5.07a1.25 1.25 0 0 0 1.767 0l9.68-9.67a1.377 1.377 0 0 0 0-1.954L14.453.414A1.373 1.373 0 0 0 13.483 0zm-.92 10.74a1.25 1.25 0 0 1 1.766 0l2.35 2.35a1.25 1.25 0 0 1-1.767 1.767l-2.35-2.35a1.25 1.25 0 0 1 0-1.766z" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-white font-bold text-sm">LeetCode Integration</h3>
+            <p className="text-slate-400 text-xs mt-0.5">
+              {user?.leetcodeUsername 
+                ? `Connected profile: ${user.leetcodeUsername}` 
+                : 'Connect your public LeetCode username to automatically sync your solved questions.'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 relative z-10 shrink-0">
+          {editingUsername ? (
+            <div className="flex gap-2 w-full sm:w-auto">
+              <input
+                type="text"
+                placeholder="LeetCode Username"
+                value={leetcodeUsername}
+                onChange={(e) => setLeetcodeUsername(e.target.value)}
+                className="bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/40 w-48 font-mono"
+              />
+              <button
+                onClick={handleUpdateUsername}
+                className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-4 py-2 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer"
+              >
+                Save
+              </button>
+              {user?.leetcodeUsername && (
+                <button
+                  onClick={() => {
+                    setLeetcodeUsername(user.leetcodeUsername);
+                    setEditingUsername(false);
+                  }}
+                  className="bg-white/5 hover:bg-white/10 text-slate-400 font-bold text-xs px-3 py-2 rounded-xl transition-all cursor-pointer border border-white/5"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleSyncSubmissions}
+                disabled={syncing}
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition-all shadow-md active:scale-95 disabled:opacity-75 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer"
+              >
+                {syncing ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    <span>Syncing...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6a5.87 5.87 0 0 1-2.8-.7l-1.05 1.05A7.83 7.83 0 0 0 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.05-1.05A7.83 7.83 0 0 0 12 4C7.58 4 4 7.58 4 12H1l4 4 4-4H6z"/></svg>
+                    <span>Sync Submissions</span>
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => setEditingUsername(true)}
+                className="bg-white/5 hover:bg-white/10 text-slate-300 font-bold text-xs px-3.5 py-2.5 rounded-xl transition-all cursor-pointer border border-white/5 active:scale-95"
+              >
+                Edit Profile
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Top Level Quick Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
         {/* Metric 1: Streak */}
@@ -469,6 +662,18 @@ const Dashboard = () => {
                     >
                       <StickyNote size={15} />
                     </button>
+
+                    <button
+                      onClick={() => handleToggleHint(question._id)}
+                      className={`transition-all duration-200 transform hover:scale-110 p-2 rounded-xl border ${
+                        activeHintQuestionId === question._id
+                          ? 'text-blue-400 bg-blue-400/10 border-blue-400/20 shadow-[0_0_10px_rgba(59,130,246,0.15)]'
+                          : 'text-slate-500 hover:text-blue-400 border-white/5 hover:border-blue-400/20 bg-white/5'
+                      }`}
+                      title="Hints & Strategy"
+                    >
+                      <Sparkles size={15} />
+                    </button>
                   </div>
 
                   {/* Main Details */}
@@ -566,6 +771,35 @@ const Dashboard = () => {
                           >
                             Save Note
                           </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Collapsible hints drawer */}
+                <AnimatePresence>
+                  {activeHintQuestionId === question._id && (
+                    <motion.div 
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25, ease: 'easeInOut' }}
+                      className="overflow-hidden w-full"
+                    >
+                      <div className="mt-5 pt-4 border-t border-white/5 w-full flex flex-col gap-3.5 relative z-10 text-left">
+                        <h4 className="text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 text-blue-400">
+                          <Sparkles size={14} className="text-blue-400 animate-pulse" />
+                          <span>Hints & Strategy Guide</span>
+                        </h4>
+                        
+                        <div className="space-y-3 mt-2">
+                          {getTopicHints(question.topicTags, question.difficulty).map((hint, idx) => (
+                            <div key={idx} className="flex gap-2.5 p-3 rounded-xl bg-slate-950/60 border border-white/5">
+                              <span className="font-mono text-xs text-slate-500 font-extrabold">0{idx + 1}.</span>
+                              <p className="text-xs text-slate-300 leading-relaxed font-sans">{hint}</p>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     </motion.div>

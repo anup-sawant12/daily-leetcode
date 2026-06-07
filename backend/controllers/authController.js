@@ -84,9 +84,63 @@ const getMe = async (req, res) => {
       name: req.user.name,
       email: req.user.email,
       streak: req.user.streak,
-      isAdmin: req.user.isAdmin
+      isAdmin: req.user.isAdmin,
+      leetcodeUsername: req.user.leetcodeUsername || ""
     };
     res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Update LeetCode Username
+// @route   PUT /api/auth/leetcode-username
+// @access  Private
+const updateLeetcodeUsername = async (req, res) => {
+  try {
+    const { leetcodeUsername } = req.body;
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    user.leetcodeUsername = leetcodeUsername || "";
+    await user.save();
+    res.json({ message: 'LeetCode username updated successfully', leetcodeUsername: user.leetcodeUsername });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get social leaderboard rankings
+// @route   GET /api/auth/leaderboard
+// @access  Private
+const getLeaderboard = async (req, res) => {
+  try {
+    const leaderboard = await User.aggregate([
+      {
+        $lookup: {
+          from: 'solvedquestions',
+          localField: '_id',
+          foreignField: 'user',
+          as: 'solvedList'
+        }
+      },
+      {
+        $project: {
+          name: 1,
+          streak: 1,
+          solvedCount: { $size: '$solvedList' }
+        }
+      },
+      {
+        $sort: {
+          streak: -1,
+          solvedCount: -1,
+          name: 1
+        }
+      }
+    ]);
+    res.json(leaderboard);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -96,4 +150,6 @@ module.exports = {
   registerUser,
   loginUser,
   getMe,
+  updateLeetcodeUsername,
+  getLeaderboard,
 };

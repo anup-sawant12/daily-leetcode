@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const SolvedQuestion = require('../models/SolvedQuestion');
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET || 'secret123', {
@@ -151,9 +152,63 @@ const getLeaderboard = async (req, res) => {
   }
 };
 
+// @desc    Get user public profile and solve stats
+// @route   GET /api/auth/profile/:id
+// @access  Private
+const getUserProfile = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const targetUser = await User.findById(userId).select('-password -email -isAdmin');
+    if (!targetUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Fetch solved questions statistics for this user
+    const solved = await SolvedQuestion.find({ user: userId }).populate('question');
+    
+    const dateCounts = {};
+    const difficultyCounts = { Easy: 0, Medium: 0, Hard: 0 };
+    const topicCounts = {};
+    
+    solved.forEach(sq => {
+      const date = sq.solvedAt.toISOString().split('T')[0];
+      dateCounts[date] = (dateCounts[date] || 0) + 1;
+      if (sq.question) {
+        difficultyCounts[sq.question.difficulty]++;
+        if (sq.question.topicTags) {
+          sq.question.topicTags.forEach(tag => {
+            topicCounts[tag] = (topicCounts[tag] || 0) + 1;
+          });
+        }
+      }
+    });
+
+    const sortedTopics = Object.keys(topicCounts).map(name => ({
+      name,
+      value: topicCounts[name]
+    })).sort((a, b) => b.value - a.value).slice(0, 5); // limit to top 5 tags
+
+    const history = Object.keys(dateCounts).map(date => ({
+      date,
+      solved: dateCounts[date]
+    })).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    res.json({
+      user: targetUser,
+      totalSolved: solved.length,
+      difficultyCounts,
+      topicCounts: sortedTopics,
+      history
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   getMe,
   getLeaderboard,
+  getUserProfile,
 };

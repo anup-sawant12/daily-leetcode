@@ -4,7 +4,7 @@ const { getTodaySet, markAsSolved, getSolvedQuestions, generateSet, getStats, re
 const { protect } = require('../middleware/authMiddleware');
 
 router.get('/seed', remoteSeed);
-router.get('/today', getTodaySet);
+router.get('/today', protect, getTodaySet);
 router.post('/generate', protect, generateSet);
 router.post('/solve/:id', protect, markAsSolved);
 router.post('/solve/:id/increment', protect, incrementSolveCount);

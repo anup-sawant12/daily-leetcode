@@ -26,7 +26,12 @@ const sampleQuestions = [
 const importData = async () => {
   try {
     await Question.deleteMany();
-    await Question.insertMany(sampleQuestions);
+    const formatted = sampleQuestions.map(q => ({
+      ...q,
+      isDynamicProgramming: q.topicTags.some(tag => tag.toLowerCase() === 'dynamic programming'),
+      isGraph: q.topicTags.some(tag => tag.toLowerCase() === 'graph' || tag.toLowerCase() === 'graphs')
+    }));
+    await Question.insertMany(formatted);
     console.log('Data Imported!');
     process.exit();
   } catch (error) {

@@ -9,7 +9,16 @@ const { generateDailySet } = require('../utils/generator');
 // @access  Private
 const generateSet = async (req, res) => {
   try {
-    const dailySet = await generateDailySet();
+    const userId = req.user ? req.user._id : null;
+    const { easyCount, mediumCount, hardCount, allowDP, allowGraph } = req.body;
+    
+    const dailySet = await generateDailySet(userId, {
+      easyCount: easyCount !== undefined ? Number(easyCount) : 1,
+      mediumCount: mediumCount !== undefined ? Number(mediumCount) : 4,
+      hardCount: hardCount !== undefined ? Number(hardCount) : 1,
+      allowDP,
+      allowGraph
+    });
     res.json(dailySet);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -18,11 +27,21 @@ const generateSet = async (req, res) => {
 
 // @desc    Get today's daily set
 // @route   GET /api/daily-sets/today
-// @access  Public
+// @access  Private
 const getTodaySet = async (req, res) => {
   try {
     const today = new Date().toISOString().split('T')[0];
-    const dailySet = await DailySet.findOne({ date: today }).populate('questions');
+    const userId = req.user ? req.user._id : null;
+    
+    let dailySet = null;
+    if (userId) {
+      dailySet = await DailySet.findOne({ date: today, user: userId }).populate('questions');
+    }
+    
+    if (!dailySet) {
+      // Fallback to global/cron daily set
+      dailySet = await DailySet.findOne({ date: today, user: null }).populate('questions');
+    }
     
     if (!dailySet) {
       return res.status(404).json({ message: 'Daily set not generated yet' });
@@ -163,14 +182,19 @@ const remoteSeed = async (req, res) => {
     const result = await response.json();
     const rawQuestions = result.data.problemsetQuestionList.data;
 
-    const formattedQuestions = rawQuestions.map(q => ({
-      questionId: q.questionFrontendId,
-      title: q.title,
-      titleSlug: q.titleSlug,
-      difficulty: q.difficulty,
-      topicTags: q.topicTags.map(tag => tag.name),
-      url: `https://leetcode.com/problems/${q.titleSlug}/`
-    }));
+    const formattedQuestions = rawQuestions.map(q => {
+      const topicTags = q.topicTags.map(tag => tag.name);
+      return {
+        questionId: q.questionFrontendId,
+        title: q.title,
+        titleSlug: q.titleSlug,
+        difficulty: q.difficulty,
+        topicTags,
+        url: `https://leetcode.com/problems/${q.titleSlug}/`,
+        isDynamicProgramming: topicTags.some(tag => tag.toLowerCase() === 'dynamic programming'),
+        isGraph: topicTags.some(tag => tag.toLowerCase() === 'graph' || tag.toLowerCase() === 'graphs')
+      };
+    });
 
     await Question.deleteMany();
     await Question.insertMany(formattedQuestions);

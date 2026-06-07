@@ -9,16 +9,30 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [isSlow, setIsSlow] = useState(false);
   const { register } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitting(true);
+    setIsSlow(false);
+    setError('');
+
+    let timer = setTimeout(() => {
+      setIsSlow(true);
+    }, 1500);
+
     try {
       await register(name, email, password);
+      clearTimeout(timer);
       navigate('/');
     } catch (err) {
+      clearTimeout(timer);
       setError(err.response?.data?.message || 'Registration failed');
+      setSubmitting(false);
+      setIsSlow(false);
     }
   };
 
@@ -117,10 +131,27 @@ const Register = () => {
             <div className="pt-2">
               <button
                 type="submit"
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.2)] hover:shadow-[0_0_30px_rgba(99,102,241,0.3)] text-sm font-black text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 transition-all active:scale-[0.98]"
+                disabled={submitting}
+                className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.2)] hover:shadow-[0_0_30px_rgba(99,102,241,0.3)] text-sm font-black text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
               >
-                Create Account
+                {submitting ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    <span>Creating Account...</span>
+                  </>
+                ) : (
+                  <span>Create Account</span>
+                )}
               </button>
+              {isSlow && (
+                <motion.p
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-[11px] text-rose-400 text-center leading-relaxed mt-2"
+                >
+                  Waking up Render backend engine... This cold start might take up to 30-50 seconds.
+                </motion.p>
+              )}
             </div>
             
             <div className="md:hidden text-center mt-4">

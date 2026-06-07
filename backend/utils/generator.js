@@ -1,8 +1,16 @@
 const Question = require('../models/Question');
 const DailySet = require('../models/DailySet');
 
-const generateDailySet = async (allowDP = false, allowGraph = false) => {
+const generateDailySet = async (userId = null, options = {}) => {
   try {
+    const {
+      easyCount = 1,
+      mediumCount = 4,
+      hardCount = 1,
+      allowDP = false,
+      allowGraph = false
+    } = options;
+
     // Get dates for the last 7 days
     const last7Days = [];
     for (let i = 1; i <= 7; i++) {
@@ -11,8 +19,11 @@ const generateDailySet = async (allowDP = false, allowGraph = false) => {
       last7Days.push(d.toISOString().split('T')[0]);
     }
 
-    // Get recently used questions
-    const recentSets = await DailySet.find({ date: { $in: last7Days } });
+    // Get recently used questions for this specific user (or global if userId is null)
+    const recentSets = await DailySet.find({ 
+      date: { $in: last7Days },
+      user: userId
+    });
     const usedQuestionIds = recentSets.reduce((acc, set) => {
       return acc.concat(set.questions);
     }, []);
@@ -24,6 +35,7 @@ const generateDailySet = async (allowDP = false, allowGraph = false) => {
 
     // Helper to get random questions
     const getRandomQuestions = async (difficulty, count) => {
+      if (count <= 0) return [];
       const q = await Question.aggregate([
         { $match: { ...baseQuery, difficulty } },
         { $sample: { size: count } }
@@ -31,29 +43,30 @@ const generateDailySet = async (allowDP = false, allowGraph = false) => {
       return q;
     };
 
-    const easy = await getRandomQuestions('Easy', 1);
-    const medium = await getRandomQuestions('Medium', 4);
-    const hard = await getRandomQuestions('Hard', 1);
+    const easy = await getRandomQuestions('Easy', easyCount);
+    const medium = await getRandomQuestions('Medium', mediumCount);
+    const hard = await getRandomQuestions('Hard', hardCount);
 
     const questions = [...easy, ...medium, ...hard].map(q => q._id);
 
-    // If not enough questions found, we might need a fallback or just proceed with what we have.
-    if (questions.length < 6) {
+    const totalExpected = easyCount + mediumCount + hardCount;
+    if (questions.length < totalExpected) {
       console.warn("Not enough unique questions found to generate full set.");
     }
 
     const today = new Date().toISOString().split('T')[0];
     
-    // Upsert today's set
+    // Upsert today's set for this user (or global if userId is null)
     const dailySet = await DailySet.findOneAndUpdate(
-      { date: today },
-      { date: today, questions },
+      { date: today, user: userId },
+      { date: today, user: userId, questions },
       { new: true, upsert: true }
-    );
+    ).populate('questions');
 
     return dailySet;
   } catch (error) {
     console.error('Error generating daily set:', error);
+    throw error;
   }
 };
 

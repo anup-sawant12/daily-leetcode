@@ -1,8 +1,48 @@
 import React, { useState, useContext, useEffect } from 'react';
 import api from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
-import { ExternalLink, CheckCircle2, Circle, Sparkles, StickyNote, Flame, Clock, Trophy, ChevronRight } from 'lucide-react';
+import { ExternalLink, CheckCircle2, Circle, Sparkles, StickyNote, Flame, Clock, Trophy, ChevronRight, X, AlertTriangle, Plus, Minus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+// Custom counter helper component
+const Counter = ({ label, value, onChange, min = 0, max = 10 }) => (
+  <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-950/40 border border-white/5 flex-1 w-full">
+    <span className="font-bold text-xs uppercase tracking-wider text-slate-400">{label}</span>
+    <div className="flex items-center gap-3">
+      <button
+        type="button"
+        disabled={value <= min}
+        onClick={() => onChange(value - 1)}
+        className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 text-white flex items-center justify-center border border-white/5 disabled:opacity-30 transition-colors cursor-pointer"
+      >
+        <Minus size={12} />
+      </button>
+      <span className="font-mono font-bold text-sm text-white w-4 text-center">{value}</span>
+      <button
+        type="button"
+        disabled={value >= max}
+        onClick={() => onChange(value + 1)}
+        className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 text-white flex items-center justify-center border border-white/5 disabled:opacity-30 transition-colors cursor-pointer"
+      >
+        <Plus size={12} />
+      </button>
+    </div>
+  </div>
+);
+
+// Custom toggle switch helper component
+const Toggle = ({ label, checked, onChange }) => (
+  <button
+    type="button"
+    onClick={() => onChange(!checked)}
+    className="flex items-center justify-between p-3.5 rounded-xl bg-slate-950/40 border border-white/5 w-full text-left cursor-pointer transition-colors hover:bg-slate-950/60"
+  >
+    <span className="font-bold text-xs uppercase tracking-wider text-slate-400">{label}</span>
+    <div className={`w-9 h-5 rounded-full transition-colors relative flex items-center p-0.5 shrink-0 ${checked ? 'bg-blue-600' : 'bg-slate-800'}`}>
+      <div className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform duration-200 ${checked ? 'translate-x-4' : 'translate-x-0'}`} />
+    </div>
+  </button>
+);
 
 const Dashboard = () => {
   const [dailySet, setDailySet] = useState(null);
@@ -14,6 +54,14 @@ const Dashboard = () => {
   const [activeNoteQuestionId, setActiveNoteQuestionId] = useState(null);
   const [noteInput, setNoteInput] = useState('');
   const [timeLeft, setTimeLeft] = useState('00:00:00');
+  
+  // Customization preferences state
+  const [easyCount, setEasyCount] = useState(1);
+  const [mediumCount, setMediumCount] = useState(4);
+  const [hardCount, setHardCount] = useState(1);
+  const [allowDP, setAllowDP] = useState(true);
+  const [allowGraph, setAllowGraph] = useState(true);
+  const [showRegenModal, setShowRegenModal] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -47,7 +95,13 @@ const Dashboard = () => {
   const handleGenerate = async () => {
     try {
       setLoading(true);
-      await api.post('/daily-sets/generate');
+      await api.post('/daily-sets/generate', {
+        easyCount,
+        mediumCount,
+        hardCount,
+        allowDP,
+        allowGraph
+      });
       const res = await api.get('/daily-sets/today');
       setDailySet(res.data);
       setLoading(false);
@@ -61,7 +115,12 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         const [setRes, solvedRes, notesRes] = await Promise.all([
-          api.get('/daily-sets/today'),
+          api.get('/daily-sets/today').catch(err => {
+            if (err.response && err.response.status === 404) {
+              return { data: null };
+            }
+            throw err;
+          }),
           api.get('/daily-sets/solved'),
           api.get('/notes')
         ]);
@@ -221,6 +280,15 @@ const Dashboard = () => {
             Solve today's selection to secure your progress. Happy hacking!
           </p>
         </div>
+        {dailySet && dailySet.date === currentDate && (
+          <button
+            onClick={() => setShowRegenModal(true)}
+            className="self-start md:self-center bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5 px-4 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 shadow-sm hover:border-blue-500/20 active:scale-95 cursor-pointer"
+          >
+            <Sparkles size={16} className="text-blue-400 animate-pulse" />
+            Customize & Regenerate
+          </button>
+        )}
       </div>
 
       {/* Top Level Quick Metrics Row */}
@@ -312,22 +380,39 @@ const Dashboard = () => {
       </div>
 
       {(!dailySet || (dailySet && dailySet.date !== currentDate)) ? (
-        <div className="text-center py-20 glass-panel rounded-3xl flex flex-col items-center justify-center relative overflow-hidden border border-white/5 shadow-2xl bg-slate-950/20 backdrop-blur-xl">
+        <div className="max-w-2xl mx-auto py-12 px-6 glass-panel rounded-3xl flex flex-col items-center relative overflow-hidden border border-white/5 shadow-2xl bg-slate-950/20 backdrop-blur-xl">
           <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none"></div>
+          
           <div className="bg-blue-600/10 p-5 rounded-full border border-blue-500/20 text-blue-400 mb-6 shadow-[0_0_30px_rgba(59,130,246,0.15)]">
             <Trophy size={40} className="animate-bounce" />
           </div>
-          <p className="text-slate-200 text-2xl font-bold mb-3 relative z-10">
+          
+          <h2 className="text-slate-200 text-2xl sm:text-3xl font-black mb-3 relative z-10 text-center tracking-tight">
             A new day has started!
+          </h2>
+          <p className="text-slate-400 text-sm max-w-sm mb-8 relative z-10 text-center leading-relaxed">
+            Get your next personalized daily coding challenges. Use the options below to customize the set difficulty to your preference.
           </p>
-          <p className="text-slate-400 text-sm max-w-sm mb-8 relative z-10">
-            Click generate to get your next personalized daily coding challenges curated by Leetcode.
-          </p>
+
+          {/* Config Panel */}
+          <div className="w-full space-y-4 mb-8 relative z-10">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <Counter label="Easy" value={easyCount} onChange={setEasyCount} />
+              <Counter label="Medium" value={mediumCount} onChange={setMediumCount} />
+              <Counter label="Hard" value={hardCount} onChange={setHardCount} />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <Toggle label="Allow Dynamic Programming" checked={allowDP} onChange={setAllowDP} />
+              <Toggle label="Allow Graph Questions" checked={allowGraph} onChange={setAllowGraph} />
+            </div>
+          </div>
+
           <button 
             onClick={handleGenerate} 
-            className="relative z-10 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-8 py-3.5 rounded-xl font-bold text-lg transition-all shadow-[0_0_30px_rgba(59,130,246,0.3)] hover:shadow-[0_0_40px_rgba(59,130,246,0.5)] transform hover:-translate-y-1 active:translate-y-0"
+            className="w-full sm:w-auto relative z-10 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-10 py-4 rounded-xl font-extrabold text-base transition-all shadow-[0_0_30px_rgba(59,130,246,0.3)] hover:shadow-[0_0_40px_rgba(59,130,246,0.5)] transform hover:-translate-y-1 active:translate-y-0 cursor-pointer"
           >
-            Generate Today's Challenge
+            Generate Challenge Set
           </button>
         </div>
       ) : (
@@ -491,6 +576,86 @@ const Dashboard = () => {
           })}
         </div>
       )}
+
+      {/* Customize & Regenerate Modal */}
+      <AnimatePresence>
+        {showRegenModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowRegenModal(false)}
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+            />
+
+            {/* Modal Box */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', duration: 0.4 }}
+              className="relative bg-slate-900 border border-white/10 p-6 rounded-2xl max-w-lg w-full shadow-2xl z-10"
+            >
+              <button
+                onClick={() => setShowRegenModal(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+
+              <h3 className="text-xl font-black text-white flex items-center gap-2 mb-3">
+                <Sparkles size={20} className="text-blue-400 animate-pulse" />
+                Customize & Regenerate Set
+              </h3>
+
+              {/* Warning box */}
+              <div className="bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs p-4 rounded-xl flex items-start gap-3 mb-6">
+                <AlertTriangle size={18} className="shrink-0 mt-0.5 text-amber-400" />
+                <div>
+                  <div className="font-bold">Overwriting Today's Challenge</div>
+                  <div className="mt-0.5 text-slate-400 leading-relaxed">
+                    Regenerating will replace your current selection of questions for today. Any checkmarks, solve counts, or notes associated with today's questions will remain in your history, but today's active set will be updated.
+                  </div>
+                </div>
+              </div>
+
+              {/* Inputs */}
+              <div className="space-y-4 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <Counter label="Easy" value={easyCount} onChange={setEasyCount} />
+                  <Counter label="Medium" value={mediumCount} onChange={setMediumCount} />
+                  <Counter label="Hard" value={hardCount} onChange={setHardCount} />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                  <Toggle label="Allow DP" checked={allowDP} onChange={setAllowDP} />
+                  <Toggle label="Allow Graphs" checked={allowGraph} onChange={setAllowGraph} />
+                </div>
+              </div>
+
+              <div className="flex gap-3 justify-end pt-2">
+                <button
+                  onClick={() => setShowRegenModal(false)}
+                  className="px-4 py-2.5 rounded-xl font-bold text-sm bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5 transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    await handleGenerate();
+                    setShowRegenModal(false);
+                  }}
+                  className="px-5 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white transition-all shadow-[0_0_15px_rgba(59,130,246,0.3)] cursor-pointer"
+                >
+                  Regenerate Set
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

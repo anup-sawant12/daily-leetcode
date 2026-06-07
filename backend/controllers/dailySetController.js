@@ -334,104 +334,6 @@ const decrementSolveCount = async (req, res) => {
   }
 };
 
-// @desc    Sync solved questions with LeetCode submissions
-// @route   POST /api/daily-sets/sync
-// @access  Private
-const syncLeetcodeSubmissions = async (req, res) => {
-  try {
-    const userId = req.user._id;
-    const user = await User.findById(userId);
-
-    if (!user || !user.leetcodeUsername) {
-      return res.status(400).json({ message: 'Please connect your LeetCode profile username first.' });
-    }
-
-    const LEETCODE_API_ENDPOINT = 'https://leetcode.com/graphql';
-    const query = `
-      query userRecentSubmissions($username: String!, $limit: Int) {
-        recentSubmissionList(username: $username, limit: $limit) {
-          title
-          titleSlug
-          timestamp
-          statusDisplay
-          lang
-        }
-      }
-    `;
-
-    const response = await fetch(LEETCODE_API_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query,
-        variables: { username: user.leetcodeUsername, limit: 20 }
-      })
-    });
-
-    const result = await response.json();
-    if (!result.data || !result.data.recentSubmissionList) {
-      return res.status(400).json({ message: 'Could not fetch LeetCode submissions. Please check if your profile name is correct and public.' });
-    }
-
-    const submissions = result.data.recentSubmissionList;
-    const acceptedSlugs = submissions
-      .filter(sub => sub.statusDisplay === 'Accepted')
-      .map(sub => sub.titleSlug);
-
-    if (acceptedSlugs.length === 0) {
-      return res.json({ message: 'No new accepted submissions found on LeetCode.', syncedCount: 0, newlySolved: [], streak: user.streak });
-    }
-
-    const matchingQuestions = await Question.find({ titleSlug: { $in: acceptedSlugs } });
-    const newlySolved = [];
-
-    for (const q of matchingQuestions) {
-      const exists = await SolvedQuestion.findOne({ user: userId, question: q._id });
-      if (!exists) {
-        await SolvedQuestion.create({
-          user: userId,
-          question: q._id,
-          solveCount: 1,
-          solvedAt: new Date()
-        });
-        newlySolved.push(q);
-      }
-    }
-
-    if (newlySolved.length > 0) {
-      const today = new Date().toISOString().split('T')[0];
-      const lastSolved = user.lastSolvedDate ? user.lastSolvedDate.toISOString().split('T')[0] : null;
-
-      if (lastSolved !== today) {
-        if (lastSolved) {
-          const yesterday = new Date();
-          yesterday.setDate(yesterday.getDate() - 1);
-          const yesterdayStr = yesterday.toISOString().split('T')[0];
-          
-          if (lastSolved === yesterdayStr) {
-            user.streak += 1;
-          } else {
-            user.streak = 1;
-          }
-        } else {
-          user.streak = 1;
-        }
-        user.lastSolvedDate = new Date();
-        await user.save();
-      }
-    }
-
-    res.json({
-      message: `Successfully synced! Found ${newlySolved.length} newly completed questions.`,
-      syncedCount: newlySolved.length,
-      newlySolved,
-      streak: user.streak
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
 module.exports = {
   getTodaySet,
   markAsSolved,
@@ -441,6 +343,5 @@ module.exports = {
   remoteSeed,
   getHistory,
   incrementSolveCount,
-  decrementSolveCount,
-  syncLeetcodeSubmissions
+  decrementSolveCount
 };

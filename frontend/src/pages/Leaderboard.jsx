@@ -7,12 +7,14 @@ import { motion } from 'framer-motion';
 const Leaderboard = () => {
   const [rankings, setRankings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [timeframe, setTimeframe] = useState('overall'); // 'weekly', 'monthly', 'overall'
   const { user } = useContext(AuthContext);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
+      setLoading(true);
       try {
-        const { data } = await api.get('/auth/leaderboard');
+        const { data } = await api.get(`/auth/leaderboard?timeframe=${timeframe}`);
         setRankings(data);
       } catch (error) {
         console.error('Error fetching leaderboard', error);
@@ -21,7 +23,7 @@ const Leaderboard = () => {
     };
 
     fetchLeaderboard();
-  }, []);
+  }, [timeframe]);
 
   const getRankBadge = (index) => {
     switch (index) {
@@ -79,7 +81,7 @@ const Leaderboard = () => {
             <span>Leaderboard</span>
           </h1>
           <p className="text-slate-400 mt-2 text-md sm:text-lg">
-            Compete with daily coders. Rank is determined by active streak and total questions solved.
+            Compete with daily coders. Rank is determined by active streak and questions solved in the selected timeframe.
           </p>
         </div>
 
@@ -100,6 +102,23 @@ const Leaderboard = () => {
         )}
       </div>
 
+      {/* Timeframe Selector Tabs */}
+      <div className="flex justify-end gap-1.5 mb-5 bg-slate-950/40 p-1.5 rounded-xl border border-white/5 w-fit ml-auto">
+        {['weekly', 'monthly', 'overall'].map((t) => (
+          <button
+            key={t}
+            onClick={() => setTimeframe(t)}
+            className={`px-4 py-2 rounded-lg text-xs font-extrabold capitalize transition-all duration-200 cursor-pointer ${
+              timeframe === t
+                ? 'bg-amber-500 text-slate-950 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+            }`}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+
       {/* Main Leaderboard Panel */}
       <div className="glass-panel rounded-3xl shadow-2xl border border-white/5 bg-slate-900/20 overflow-hidden relative">
         <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full filter blur-[80px] pointer-events-none"></div>
@@ -111,7 +130,9 @@ const Leaderboard = () => {
                 <th className="py-5 px-6 w-20 text-center">Rank</th>
                 <th className="py-5 px-6">Coder</th>
                 <th className="py-5 px-6 text-center w-36">Daily Streak</th>
-                <th className="py-5 px-6 text-right w-36">Total Solved</th>
+                <th className="py-5 px-6 text-right w-36">
+                  {timeframe === 'overall' ? 'Total Solved' : `${timeframe} Solved`}
+                </th>
               </tr>
             </thead>
             <tbody>

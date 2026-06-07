@@ -93,29 +93,24 @@ const getMe = async (req, res) => {
   }
 };
 
-// @desc    Update LeetCode Username
-// @route   PUT /api/auth/leetcode-username
-// @access  Private
-const updateLeetcodeUsername = async (req, res) => {
-  try {
-    const { leetcodeUsername } = req.body;
-    const user = await User.findById(req.user._id);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    user.leetcodeUsername = leetcodeUsername || "";
-    await user.save();
-    res.json({ message: 'LeetCode username updated successfully', leetcodeUsername: user.leetcodeUsername });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
 // @desc    Get social leaderboard rankings
 // @route   GET /api/auth/leaderboard
 // @access  Private
 const getLeaderboard = async (req, res) => {
   try {
+    const { timeframe = 'overall' } = req.query;
+    
+    let dateFilter = null;
+    const now = new Date();
+    
+    if (timeframe === 'weekly') {
+      dateFilter = new Date();
+      dateFilter.setDate(now.getDate() - 7);
+    } else if (timeframe === 'monthly') {
+      dateFilter = new Date();
+      dateFilter.setDate(now.getDate() - 30);
+    }
+
     const leaderboard = await User.aggregate([
       {
         $lookup: {
@@ -129,13 +124,23 @@ const getLeaderboard = async (req, res) => {
         $project: {
           name: 1,
           streak: 1,
-          solvedCount: { $size: '$solvedList' }
+          solvedCount: dateFilter
+            ? {
+                $size: {
+                  $filter: {
+                    input: '$solvedList',
+                    as: 'sq',
+                    cond: { $gte: ['$$sq.solvedAt', dateFilter] }
+                  }
+                }
+              }
+            : { $size: '$solvedList' }
         }
       },
       {
         $sort: {
-          streak: -1,
           solvedCount: -1,
+          streak: -1,
           name: 1
         }
       }
@@ -150,6 +155,5 @@ module.exports = {
   registerUser,
   loginUser,
   getMe,
-  updateLeetcodeUsername,
   getLeaderboard,
 };

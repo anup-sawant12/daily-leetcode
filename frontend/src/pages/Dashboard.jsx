@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import api from '../utils/api';
 import { AuthContext } from '../context/AuthContext';
-import { ExternalLink, CheckCircle2, Circle, Sparkles, StickyNote, Flame, Clock, Trophy, ChevronRight, X, AlertTriangle, Plus, Minus } from 'lucide-react';
+import { ExternalLink, CheckCircle2, Circle, Sparkles, StickyNote, Flame, Clock, Trophy, ChevronRight, X, AlertTriangle, Plus, Minus, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Custom counter helper component
@@ -96,61 +96,8 @@ const Dashboard = () => {
   const [allowGraph, setAllowGraph] = useState(true);
   const [showRegenModal, setShowRegenModal] = useState(false);
 
-  // LeetCode Sync and Hints state
-  const [leetcodeUsername, setLeetcodeUsername] = useState('');
-  const [editingUsername, setEditingUsername] = useState(false);
-  const [syncing, setSyncing] = useState(false);
-  const [syncSuccess, setSyncSuccess] = useState(null);
+  // Hints state
   const [activeHintQuestionId, setActiveHintQuestionId] = useState(null);
-
-  useEffect(() => {
-    if (user?.leetcodeUsername) {
-      setLeetcodeUsername(user.leetcodeUsername);
-      setEditingUsername(false);
-    } else {
-      setEditingUsername(true);
-    }
-  }, [user]);
-
-  const handleUpdateUsername = async () => {
-    try {
-      setLoading(true);
-      const { data } = await api.put('/auth/leetcode-username', { leetcodeUsername });
-      setUser({ ...user, leetcodeUsername: data.leetcodeUsername });
-      setEditingUsername(false);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error updating username', error);
-      setLoading(false);
-    }
-  };
-
-  const handleSyncSubmissions = async () => {
-    try {
-      setSyncing(true);
-      setSyncSuccess(null);
-      const { data } = await api.post('/daily-sets/sync');
-      setUser({ ...user, streak: data.streak });
-      setSyncSuccess({ message: data.message, count: data.syncedCount });
-      
-      const setRes = await api.get('/daily-sets/today');
-      setDailySet(setRes.data);
-      
-      const solvedRes = await api.get('/daily-sets/solved');
-      const map = {};
-      solvedRes.data.forEach(sq => {
-        if (sq.question) {
-          map[sq.question._id] = sq.solveCount || 1;
-        }
-      });
-      setSolvedMap(map);
-      setSyncing(false);
-    } catch (error) {
-      console.error('Error syncing submissions', error);
-      setSyncSuccess({ message: error.response?.data?.message || 'Sync failed', count: 0, error: true });
-      setSyncing(false);
-    }
-  };
 
   const handleToggleHint = (questionId) => {
     if (activeHintQuestionId === questionId) {
@@ -388,100 +335,46 @@ const Dashboard = () => {
         )}
       </div>
 
-      {syncSuccess && (
-        <div className={`p-4 rounded-xl border mb-6 flex items-start gap-3 justify-between relative z-10 ${
-          syncSuccess.error 
-            ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' 
-            : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-        }`}>
-          <div className="text-xs">
-            <span className="font-bold">{syncSuccess.error ? 'Sync Error: ' : 'Sync Complete: '}</span>
-            <span>{syncSuccess.message}</span>
-          </div>
-          <button 
-            onClick={() => setSyncSuccess(null)}
-            className="text-slate-400 hover:text-white transition-colors cursor-pointer"
-          >
-            <X size={14} />
-          </button>
-        </div>
-      )}
-
-      {/* LeetCode Sync widget */}
-      <div className="glass-panel p-5 rounded-2xl border border-white/5 bg-slate-900/40 mb-10 relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="absolute top-0 left-0 w-24 h-24 bg-blue-500/5 rounded-full filter blur-xl pointer-events-none"></div>
-        <div className="flex items-center gap-3.5">
-          <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-xl">
-            <svg className="w-5 h-5 fill-current text-amber-500" viewBox="0 0 24 24">
-              <path d="M13.483 0a1.374 1.374 0 0 0-.961.414l-9.67 9.68a1.25 1.25 0 0 0 0 1.766l5.07 5.07a1.25 1.25 0 0 0 1.767 0l9.68-9.67a1.377 1.377 0 0 0 0-1.954L14.453.414A1.373 1.373 0 0 0 13.483 0zm-.92 10.74a1.25 1.25 0 0 1 1.766 0l2.35 2.35a1.25 1.25 0 0 1-1.767 1.767l-2.35-2.35a1.25 1.25 0 0 1 0-1.766z" />
-            </svg>
+      {/* LeetCode Sync Integration Locked Widget */}
+      <div className="glass-panel p-5 rounded-2xl border border-white/5 bg-slate-900/40 mb-10 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="absolute top-0 left-0 w-24 h-24 bg-amber-500/5 rounded-full filter blur-xl pointer-events-none"></div>
+        
+        <div className="flex items-start md:items-center gap-4">
+          <div className="p-3 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-xl shrink-0">
+            <Lock size={20} className="text-amber-500" />
           </div>
           <div>
-            <h3 className="text-white font-bold text-sm">LeetCode Integration</h3>
-            <p className="text-slate-400 text-xs mt-0.5">
-              {user?.leetcodeUsername 
-                ? `Connected profile: ${user.leetcodeUsername}` 
-                : 'Connect your public LeetCode username to automatically sync your solved questions.'}
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-white font-bold text-sm">LeetCode Sync Status</h3>
+              <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-rose-500/10 border border-rose-500/25 text-rose-400">
+                Sync Locked
+              </span>
+              {user?.leetcodeUsername && (
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-emerald-500/10 border border-emerald-500/25 text-emerald-400">
+                  Verified: {user.leetcodeUsername}
+                </span>
+              )}
+            </div>
+            <p className="text-slate-400 text-xs mt-1.5 leading-relaxed max-w-2xl">
+              Automatic profile syncing is locked to prevent profile hijacking and spoofing on the leaderboards. 
+              To link or verify your LeetCode profile, please contact administration with your profile details for manual verification.
             </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 relative z-10 shrink-0">
-          {editingUsername ? (
-            <div className="flex gap-2 w-full sm:w-auto">
-              <input
-                type="text"
-                placeholder="LeetCode Username"
-                value={leetcodeUsername}
-                onChange={(e) => setLeetcodeUsername(e.target.value)}
-                className="bg-slate-950 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/40 w-48 font-mono"
-              />
-              <button
-                onClick={handleUpdateUsername}
-                className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-4 py-2 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer"
-              >
-                Save
-              </button>
-              {user?.leetcodeUsername && (
-                <button
-                  onClick={() => {
-                    setLeetcodeUsername(user.leetcodeUsername);
-                    setEditingUsername(false);
-                  }}
-                  className="bg-white/5 hover:bg-white/10 text-slate-400 font-bold text-xs px-3 py-2 rounded-xl transition-all cursor-pointer border border-white/5"
-                >
-                  Cancel
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleSyncSubmissions}
-                disabled={syncing}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl transition-all shadow-md active:scale-95 disabled:opacity-75 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer"
-              >
-                {syncing ? (
-                  <>
-                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                    <span>Syncing...</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6a5.87 5.87 0 0 1-2.8-.7l-1.05 1.05A7.83 7.83 0 0 0 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.05-1.05A7.83 7.83 0 0 0 12 4C7.58 4 4 7.58 4 12H1l4 4 4-4H6z"/></svg>
-                    <span>Sync Submissions</span>
-                  </>
-                )}
-              </button>
-              <button
-                onClick={() => setEditingUsername(true)}
-                className="bg-white/5 hover:bg-white/10 text-slate-300 font-bold text-xs px-3.5 py-2.5 rounded-xl transition-all cursor-pointer border border-white/5 active:scale-95"
-              >
-                Edit Profile
-              </button>
-            </div>
-          )}
-        </div>
+        {user?.leetcodeUsername && (
+          <div className="relative z-10 shrink-0 self-start md:self-center">
+            <a
+              href={`https://leetcode.com/${user.leetcodeUsername}`}
+              target="_blank"
+              rel="noreferrer"
+              className="bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5 px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2 shadow-sm hover:border-amber-500/20 active:scale-95 cursor-pointer"
+            >
+              <ExternalLink size={14} className="text-amber-400" />
+              View LeetCode Profile
+            </a>
+          </div>
+        )}
       </div>
 
       {/* Top Level Quick Metrics Row */}
